@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ooo-as-a-Service</title>
+    <meta
+      name="description"
+      content="Sometimes you don’t need advice. You just need ooo."
+    />
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #fafafa;
+        color: #111;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .container {
+        text-align: center;
+        max-width: 460px;
+        padding: 32px;
+      }
+
+      h1 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .subtitle {
+        color: #555;
+        margin-bottom: 2.5rem;
+        font-size: 1rem;
+      }
+
+      button {
+        font-size: 1rem;
+        padding: 12px 22px;
+        border: none;
+        border-radius: 10px;
+        background: #111;
+        color: white;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: #111;
+        border: 1px solid #ddd;
+      }
+
+      button:hover {
+        opacity: 0.9;
+      }
+
+      .result {
+        margin-top: 2.5rem;
+        font-size: 1.25rem;
+        line-height: 1.5;
+      }
+
+      .unsolicited {
+        margin-top: 1rem;
+        color: #666;
+        font-size: 1rem;
+      }
+
+      .actions {
+        margin-top: 1.75rem;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        font-size: 0.85rem;
+        color: #888;
+      }
+      .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="container">
+        <h1>Am I out of office?</h1>
+
+        <div class="subtitle">
+          An automatic reply, whether you asked for one or not.
+        </div>
+
+        <button onclick="getOoo()">Generate OOO</button>
+
+        <div class="result fade-in" id="result"></div>
+
+        <div class="actions" id="actions" style="display: none">
+          <button class="secondary" onclick="copyText()">Copy reply</button>
+          <button class="secondary" onclick="shareText()">Share</button>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <a
+          href="https://github.com/yourname/ooo-as-a-service"
+          target="_blank"
+          rel="noopener"
+        >
+          GitHub
+        </a>
+      </footer>
+    </div>
+
+    <script>
+      let lastText = "";
+
+      async function getOoo() {
+        const res = await fetch("/api/ooo");
+        const data = await res.json();
+
+        const result = document.getElementById("result");
+        const actions = document.getElementById("actions");
+
+        result.classList.remove("fade-in");
+        result.innerHTML = "";
+
+        actions.style.display = "none";
+        lastText = "";
+
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+
+        if (data.ooo) {
+          result.innerHTML = `<strong>${data.ooo}</strong>`;
+          lastText = data.ooo;
+        } else {
+          result.innerHTML = `
+            <strong>${data.message}</strong>
+          `;
+          lastText = data.message;
+        }
+
+        requestAnimationFrame(() => {
+          result.classList.add("fade-in");
+        });
+
+        actions.style.display = "flex";
+      }
+
+      function copyText() {
+        navigator.clipboard.writeText(lastText);
+      }
+
+      function shareText() {
+        if (navigator.share) {
+          navigator.share({
+            text: lastText,
+            title: "ooo",
+          });
+        } else {
+          copyText();
+          alert("Copied to clipboard.");
+        }
+      }
+    </script>
+  </body>
+</html>
